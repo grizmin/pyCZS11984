@@ -1,0 +1,27 @@
+.idea
+.rfid
+# Sphinx documentation
+docs/_build/
+__pycache__/
+*.py[cod]
+*$py.class
+build/
+dist/
+.installed.cfg
+bin
+develop-eggs
+downloads
+eggs
+parts
+src/*.egg-info
+lib
+lib64
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
