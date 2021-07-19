@@ -41,7 +41,7 @@ class RFIDPacket:
 
     BYTEORDER = 'big'
 
-    def __init__(self, address, cmd, data=[], head=0x00, length=0x00, check=0x00, byteorder='big'):
+    def __init__(self, address, cmd, data=[], head=PACKET_HEAD, length=0x00, check=0x00, byteorder=BYTEORDER):
         """
         Represents common IND903/CSZ6174 controller packet.
         Args:
@@ -66,9 +66,9 @@ class RFIDPacket:
         self._length = length if isinstance(length, bytes) else \
                       self.calculate_packet_length(self._data)\
                       .to_bytes(1, byteorder=byteorder, signed=False)
-        subpacket = b''.join([self._head + self._length + self._address + self._cmd + self._data])
-        self._check = check if isinstance(check, bytes) else self.checksum8bit(subpacket)
-        self.packet = bytearray(subpacket + self._check)
+        self.subpacket = b''.join([self._head + self._length + self._address + self._cmd + self._data])
+        self._check = check if isinstance(check, bytes) else self.checksum8bit(self.subpacket)
+        self.packet = bytearray(self.subpacket + self._check)
 
     def __repr__(self):
         repr = self.to_string()
@@ -145,7 +145,7 @@ class RFIDPacket:
         return (((sum(data) ^ 0xFF) + 1) & 0xFF).to_bytes(1, byteorder=cls.BYTEORDER)
 
     @staticmethod
-    def generate_packet(data: bytes) -> RFIDPacket:
+    def generate_packet(data: bytes):
         """
 
         Args:

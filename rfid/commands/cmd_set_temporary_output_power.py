@@ -27,8 +27,13 @@ class cmd_set_temporary_output_power(RFIDCommand):
         assert 20 <= power <= 33, "RF output power, range from 20-33(0x14 – 0x21), the unit is dBm."
 
     def _process_result(self, result: bytes) -> bool:
-        r = self.bytes_to_hex(result)[-2]
-        return ERR_CODES[f'0x{r}'][1]
+        try:
+            r = self.bytes_to_hex(result)[-2]
+            return ERR_CODES[f'0x{r}'][1]
+        except Exception as e:
+            if not result:
+                print("Device returned nothing. Is this ok?")
+            raise e
 
     def __call__(self, session: Serial,
                  callback: Callable[[bytes], bool] = _process_result) -> list[str]:

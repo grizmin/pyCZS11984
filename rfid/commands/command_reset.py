@@ -5,8 +5,9 @@ from serial import Serial
 
 
 class CMD_reset(RFIDCommand):
-    def __init__(self):
-        super().__init__('70')
+    def __init__(self, cmd="70", addr=0x01, length=0x03):
+        super().__init__(cmd, addr=addr, length=length)
+
 
     def _process_result(self, result: bytes) -> bool:
         if result:
@@ -24,7 +25,7 @@ class CMD_reset(RFIDCommand):
         """
         print(f"Tx: {self.printable_command}")
         s = session.write(self.command)
-        r = session.read(self.length+2)
+        r = session.read(self.length+4)
         print(f"Rx: {self.printable_bytestring(r)}")
         r = callback(self, r)
         return r

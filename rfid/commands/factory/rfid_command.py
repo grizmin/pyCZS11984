@@ -63,6 +63,9 @@ class RFIDCommand(RFIDCommandType):
             bytes_data = map(self.int_to_bytes, self.param_data)
         byte_command = bytearray([self.HEADER, RFIDCommand.calculate_packet_length(self.param_data), self.addr, int(self.cmd, 16)]) + \
                         b''.join(list(map(self.int_to_bytes, self.param_data)))
+        # ### debug - remove
+        # print(byte_command)
+
         byte_command += self.checksum8bit(byte_command)
         return byte_command
 
