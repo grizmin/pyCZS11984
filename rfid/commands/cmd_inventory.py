@@ -172,6 +172,25 @@ class cmd_inventory(RFIDCommand):
 
 
     def _process_result(self, result: bytes) -> bool:
+        """
+        status packet example:
+        * AntId = The antenna ID of this inventory round.
+        * ReadRate = Tag ReadRate of this command (tag/sec).
+        * TotalRead = Total tag identification count (including duplicate tags).
+        Head|Len|Address|Cmd| AntID | ReadRate (2 bytes) | TotalRead(4 bytes)       | checksum
+        [A0|0A | 01    | 89| 00    |   '00', '14'       |   '00', '00', '00', '0D' |  AB      ]
+        ['A0', '0A', '01', '89', '00', '00', '14', '00', '00', '00', '0D', 'AB']
+
+        tag packet example:
+        * FreqAnt = 1 byte. The high 6 bits are frequency parameter; the low two bits are antenna id.
+        * PC = Tag’s PC. 2 bytes
+        * EPC = Tag's EPC. n bytes
+        * RSSI = 1 byte. The RSSI when the tag was identified
+
+        Head|Len|Address|Cmd| FreqAnt |PC(2 bytes)  |       EPC(n bytes)                                                    | RSSI | checksum
+        [A0|13 | 01    | 89| 0C      | '30', '00'  | 'E2', '00', '00', '15', '24', '02', '02', '19', '15', '20', '7F', '39'| '52' |  10     ]
+        ['A0', '13', '01', '89', '0C', '30', '00', 'E2', '00', '00', '15', '24', '02', '02', '19', '15', '20', '7F', '39', '52', '10']
+        """
         if result:
             result = self._parse_result(result)
             stats = result[-1]
