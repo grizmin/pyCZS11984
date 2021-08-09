@@ -1,5 +1,5 @@
 __all__ = [
-    'command_reset',
+    'cmd_reset',
     'cmd_set_uart_baudrate',
     'cmd_get_firmware_version',
     'cmd_set_reader_address',
@@ -17,6 +17,7 @@ __all__ = [
     'cmd_set_temporary_output_power',
     'cmd_get_reader_identifier',
     'cmd_get_rf_link_profile',
-    'cmd_get_rf_port_return_loss'
+    'cmd_get_rf_port_return_loss',
+    'cmd_inventory'
 ]
 

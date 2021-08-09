@@ -1,10 +1,11 @@
 from rfid.commands.factory.rfid_command import RFIDCommand
 from typing import Callable, List
 from serial import Serial
+from time import sleep
 from . constants import ERR_CODES
 
 
-class CMD_set_frequency_region(RFIDCommand):
+class cmd_set_frequency_region(RFIDCommand):
     """ Command set frequency of CZS6147 controller.
         The baudrate will be written to persistent memory.
 
@@ -75,9 +76,12 @@ class CMD_set_frequency_region(RFIDCommand):
         58(0x3A) 927.50 MHz
         59(0x3B) 928.00 MHz
     """
+
+    default_timeout = 0.1
+
     def __init__(self, frequency_params: List[int]):
         self.freq_params = frequency_params
-        super().__init__('78', param_data=self._freq_params)
+        super().__init__('78', param_data=self.freq_params)
 
     @property
     def freq_params(self) -> List[int]:
@@ -94,7 +98,7 @@ class CMD_set_frequency_region(RFIDCommand):
         self._freq_params = freq_params
 
     def _process_result(self, result: bytes) -> bool:
-        r = self.bytes_to_hex(result)[-2]
+        r = self._parse_result(result)[-1][-2]
         return ERR_CODES[f'0x{r}'][1]
 
     def __call__(self, session: Serial,
@@ -105,8 +109,10 @@ class CMD_set_frequency_region(RFIDCommand):
             session: Serial session
         """
         print(f"Tx: {self.printable_command}")
-        s = session.write(self.command)
-        r = session.read(self.length+3)
+        session.write(self.command)
+        sleep(self.default_timeout)
+        in_waiting = session.in_waiting
+        r = session.read(in_waiting)
         print(f"Rx: {self.printable_bytestring(r)}")
         r = callback(self, r)
         return r

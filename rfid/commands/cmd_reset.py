@@ -2,18 +2,24 @@ from rfid.commands.factory.rfid_command import RFIDCommand
 from .constants import ERR_CODES
 from typing import Callable
 from serial import Serial
+from time import sleep
 
 
-class CMD_reset(RFIDCommand):
-    def __init__(self, cmd="70", addr=0x01, length=0x03):
-        super().__init__(cmd, addr=addr, length=length)
+class cmd_reset(RFIDCommand):
+
+    default_timeout = 0.1
+    reset_command = "70"
+
+    def __init__(self):
+        super().__init__(cmd=self.reset_command)
 
 
     def _process_result(self, result: bytes) -> bool:
         if result:
-            r = self.bytes_to_hex(result)[-2]
+            r = self._parse_result(result)[-1][-2]
             return ERR_CODES[f'0x{r}'][1]
-        return 'Controller returned nothing'
+        # special case - reset command is supposed to return nohing
+        return True
 
 
     def __call__(self, session: Serial,
@@ -24,8 +30,10 @@ class CMD_reset(RFIDCommand):
             session: Serial session
         """
         print(f"Tx: {self.printable_command}")
-        s = session.write(self.command)
-        r = session.read(self.length+4)
+        session.write(self.command)
+        sleep(self.default_timeout)
+        in_waiting = session.in_waiting
+        r = session.read(in_waiting)
         print(f"Rx: {self.printable_bytestring(r)}")
         r = callback(self, r)
         return r

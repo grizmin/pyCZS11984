@@ -1,15 +1,19 @@
 from rfid.commands.factory.rfid_command import RFIDCommand
 from typing import Callable
+from time import sleep
 from serial import Serial
+from . constants import ERR_CODES
 
 
-class CMD_set_output_power(RFIDCommand):
+class cmd_set_output_power(RFIDCommand):
     """ Command set output power of CZS6147 controller.
         The baudrate will be written to persistent memory.
     """
+    default_timeout = 0.1
+
     def __init__(self, output_power: int):
         self.power = output_power
-        super().__init__('76', param_data=[self._power])
+        super().__init__('76', param_data=[self.power])
 
     @property
     def power(self) -> int:
@@ -18,7 +22,7 @@ class CMD_set_output_power(RFIDCommand):
         Returns: output power in dBm.
 
         """
-        return self.output_power
+        return self._power
 
     @power.setter
     def power(self, output_power: int) -> None:
@@ -26,8 +30,8 @@ class CMD_set_output_power(RFIDCommand):
         self._power = output_power
 
     def _process_result(self, result: bytes) -> bool:
-        r = self.bytes_to_hex(result)[-2]
-        return "OK" if r == '10' else "Error"
+        r = self._parse_result(result)[-1][-2]
+        return ERR_CODES[f'0x{r}'][1]
 
     def __call__(self, session: Serial,
                  callback: Callable[[bytes], bool] = _process_result) -> list[str]:
@@ -37,8 +41,10 @@ class CMD_set_output_power(RFIDCommand):
             session: Serial session
         """
         print(f"Tx: {self.printable_command}")
-        s = session.write(self.command)
-        r = session.read(self.length+3)
+        session.write(self.command)
+        sleep(self.default_timeout)
+        in_waiting = session.in_waiting
+        r = session.read(in_waiting)
         print(f"Rx: {self.printable_bytestring(r)}")
         r = callback(self, r)
         return r

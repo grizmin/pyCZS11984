@@ -1,10 +1,11 @@
 from rfid.commands.factory.rfid_command import RFIDCommand
 from typing import Callable, List
 from serial import Serial
+from time import sleep
 from . constants import ERR_CODES
 
 
-class CMD_get_frequency_region(RFIDCommand):
+class cmd_get_frequency_region(RFIDCommand):
     """ Command set frequency of CZS6147 controller.
         The baudrate will be written to persistent memory.
 
@@ -27,13 +28,17 @@ class CMD_get_frequency_region(RFIDCommand):
         Head|Len|Address|Cmd| Region|FreqSpace|FreqQuantity| Frequency | checksum
         [01|06 | 01    | 79| 04    |    32   |   0A       |  0D 32 E8 |  76     ]
     """
+
+    default_timeout = 0.1
+
+
     def __init__(self):
         super().__init__('79')
 
 
     def _process_result(self, result: bytes) -> bool:
-        # convert to list of hex strings
-        result = [f"{v:02x}".upper() for v in result]
+        # we expect only 1 result packet
+        result = self._parse_result(result)[-1]
         # referring to documentation
         # bytes 8,9,10 - frequency
         freq = int("".join(map(str, result[-4:-1])), 16)
@@ -52,7 +57,9 @@ class CMD_get_frequency_region(RFIDCommand):
         """
         print(f"Tx: {self.printable_command}")
         s = session.write(self.command)
-        r = session.read(11)
+        sleep(self.default_timeout)
+        in_waiting = session.in_waiting
+        r = session.read(in_waiting)
         print(f"Rx: {self.printable_bytestring(r)}")
         r = callback(self, r)
         return r

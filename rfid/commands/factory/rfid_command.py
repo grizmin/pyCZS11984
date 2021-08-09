@@ -2,7 +2,6 @@ from typing import List
 from rfid.commands.factory.command_type import RFIDCommandType
 from .rfid_packet import RFIDPacket
 
-
 class RFIDCommand(RFIDCommandType):
     HEADER = 0xA0
 
@@ -54,8 +53,35 @@ class RFIDCommand(RFIDCommandType):
     def int_from_bytes(xbytes: bytes) -> int:
         return int.from_bytes(xbytes, 'big')
 
+    @staticmethod
+    def _parse_result(data: list) -> list:
+        data = RFIDCommand.bytes_to_hex(data)
+        command_indexes = []
+        commands = []
+        for idx in range(len(data)):
+            if data[idx] == "A0":
+                # print(f"Command start found at {idx}")
+                command_indexes.append(idx)
+
+        for idx in range(len(command_indexes)):
+            start = command_indexes[idx]
+            end = command_indexes[idx + 1] if len(command_indexes) > idx + 1 else None
+            commands.append(data[start:end])
+
+        for command in commands:
+            received_checksum = command[-1]
+            calculated_checksum = RFIDCommand.bytes_to_hex(RFIDPacket.checksum8bit(RFIDCommand.string_to_bytearray("".join(command[:-1]))))
+            if received_checksum != received_checksum:
+                print(f"Checksum mismatch. received_checksum: {received_checksum}, calculated_checksum: {calculated_checksum}, packet: {command}")
+
+        return commands
+
     def _process_result(self, result: list) -> str:
-        return self.bytes_to_hex(result)
+        if result:
+            commands = RFIDCommand._parse_result(result)
+            return commands[-1]
+        else:
+            return ""
 
     def __build_command_v1(self) -> bytearray:
         if self.param_data:
@@ -69,11 +95,13 @@ class RFIDCommand(RFIDCommandType):
         byte_command += self.checksum8bit(byte_command)
         return byte_command
 
-    def __build_command(self) -> RFIDPacket:
+    def __build_command(self, data=[]) -> RFIDPacket:
         subcommand = [
             self.addr,
             int(self.cmd, 16)
         ]
+        if data:
+            return RFIDPacket(*subcommand, data=data)
         return RFIDPacket(*subcommand, data=self.param_data)
 
 

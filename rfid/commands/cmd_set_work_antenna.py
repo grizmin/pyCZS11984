@@ -2,12 +2,14 @@ from rfid.commands.factory.rfid_command import RFIDCommand
 from .constants import ERR_CODES
 from typing import Callable
 from serial import Serial
+from time import sleep
 
-
-class CMD_set_work_antenna(RFIDCommand):
+class cmd_set_work_antenna(RFIDCommand):
     """ Command set_uart_baudrate of CZS6147 controller.
         The baudrate will be written to persistent memory.
     """
+    default_timeout = 0.1
+
     def __init__(self, antenna_id: int):
         self.antenna = antenna_id
         super().__init__('74', param_data=[self.antenna])
@@ -38,8 +40,10 @@ class CMD_set_work_antenna(RFIDCommand):
             session: Serial session
         """
         print(f"Tx: {self.printable_command}")
-        s = session.write(self.command)
-        r = session.read(self.length+3)
+        session.write(self.command)
+        sleep(self.default_timeout)
+        in_waiting = session.in_waiting
+        r = session.read(in_waiting)
         print(f"Rx: {self.printable_bytestring(r)}")
         r = callback(self, r)
         return r

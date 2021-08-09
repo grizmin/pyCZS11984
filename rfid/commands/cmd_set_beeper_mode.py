@@ -1,6 +1,7 @@
 from rfid.commands.factory.rfid_command import RFIDCommand
 from typing import Callable, List
 from serial import Serial
+from time import sleep
 from . constants import ERR_CODES
 
 
@@ -16,9 +17,12 @@ class cmd_set_beeper_mode(RFIDCommand):
         Example params array:
         [01]
     """
-    def __init__(self, beeper_mode: List[int]):
+
+    default_timeout = 0.1
+
+    def __init__(self, beeper_mode: int):
         self.beeper_mode = beeper_mode
-        super().__init__('7A', param_data=self.beeper_mode)
+        super().__init__('7A', param_data=[self.beeper_mode])
 
     @property
     def beeper_mode(self) -> List[int]:
@@ -28,13 +32,13 @@ class cmd_set_beeper_mode(RFIDCommand):
         return self._beeper_mode
 
     @beeper_mode.setter
-    def beeper_mode(self, beeper_mode: List[int]) -> None:
-        assert 0 <= beeper_mode[0] <= 2, "beeper mode must be in [0, 1, 2]"
+    def beeper_mode(self, beeper_mode: int) -> None:
+        assert 0 <= beeper_mode <= 2, "beeper mode must be in [0, 1, 2]"
         self._beeper_mode = beeper_mode
 
     def _process_result(self, result: bytes) -> bool:
-        r = self.bytes_to_hex(result)[-2]
-        return ERR_CODES[f'0x{r}'][1]
+        result = self._parse_result(result)[-1][-2]
+        return ERR_CODES[f'0x{result}'][1]
 
     def __call__(self, session: Serial,
                  callback: Callable[[bytes], bool] = _process_result) -> list[str]:
@@ -44,8 +48,10 @@ class cmd_set_beeper_mode(RFIDCommand):
             session: Serial session
         """
         print(f"Tx: {self.printable_command}")
-        s = session.write(self.command)
-        r = session.read(self.length+3)
+        session.write(self.command)
+        sleep(self.default_timeout)
+        in_waiting = session.in_waiting
+        r = session.read(in_waiting)
         print(f"Rx: {self.printable_bytestring(r)}")
         r = callback(self, r)
         return r
