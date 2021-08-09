@@ -27,6 +27,11 @@ def main():
 
 
         cmd_version(s)
+        # print all tags
+        # inventory command supports interval parameter, which overwrites instantination parameter interval.
+        # E.G. inventory(s, interval=10)
+        print("\n".join([f"id: {id}, tagid: {tagid}" for id, tagid in enumerate(["".join(tag["tag_epc"]) for tag in inventory(s, interval=10)["result"]["tags"]])]))
+
         # cmd_write_gpio = command('cmd_write_gpio_value', [3, 0])
 
 
