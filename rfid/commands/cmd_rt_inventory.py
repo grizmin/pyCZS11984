@@ -5,14 +5,10 @@ from time import sleep
 from . constants import ERR_CODES, RSSI_MAP, FREQ_MAP, DEFAULT_TIMEOUT
 
 
-class cmd_inventory(RFIDCommand):
-    """ Command inventory of CZS6147 controller.
+class cmd_rt_inventory(RFIDCommand):
+    """ Command rf link profile of CZS6147 controller.
 
-        host packet
-        [Head | Len | Address | Cmd | Repeat interval | Checksum ]
-        [ A0  | 04  |         |  80 |                 |          ]
-
-        repeat interval - Repeat time of inventory round.
+        interval - Repeat time of inventory round.
         When Repeat = 255, The inventory duration is minimized.
         For example, if the RF field only has one or two tags,
         the inventory duration could be only 30-50 mS,
@@ -20,39 +16,50 @@ class cmd_inventory(RFIDCommand):
         switch applications on multi-ant devices.
         Documentation does not provide definition of what this humber representation in time units is.
         I think it's deciseconds (centisecond) and this is how I am implementing it.
-
-
-        response packets
-        [ Head | Len | Address | Cmd | AntID | TagCount | ReadRate | TotalRead | Check ]
-        [ 0xA0 |0x0C | 1Byte   |0x80 | 1Byte | 2 Bytes  | 2Bytes   | 4Bytes    | 1Byte ]
-
-
     """
-    cmd_inventory = '80'
+    cmd_rt_inventory = '89'
 
     def __init__(self, scan_duration: int):
         self.scan_duration = scan_duration
 
 
     @property
-    def repeat_interval(self) -> int:
+    def scan_duration(self) -> int:
         """
-        Returns: repeat interval parameter.
+        Returns: scan interval parameter.
         """
-        return self._repeat_interval
+        return self._scan_duration
 
-    @repeat_interval.setter
-    def repeat_interval(self, repeat_interval: int) -> None:
-        assert 1 <= repeat_interval <= 255, "Scan duration. Accepted values are in range 0-255."
-        self._repeat_interval = repeat_interval
-        super().__init__(self.cmd_rt_inventory, param_data=[self.repeat_interval])
+    @scan_duration.setter
+    def scan_duration(self, scan_duration: int) -> None:
+        assert 1 <= scan_duration <= 255, "Scan duration. Accepted values are in range 0-255."
+        self._scan_duration = scan_duration
+        super().__init__(self.cmd_rt_inventory, param_data=[self.scan_duration])
 
 
     def _process_result(self, result: bytes) -> bool:
         """
-        response packet example:
-        [ Head | Len | Address | Cmd | AntID | TagCount | ReadRate | TotalRead | Check ]
-        [ 0xA0 |0x0C | 1Byte   |0x80 | 1Byte | 2 Bytes  | 2Bytes   | 4Bytes    | 1Byte ]
+        status packet example:
+        * AntId = The antenna ID of this inventory round.
+        * ReadRate = Tag ReadRate of this command (tag/sec).
+        * TotalRead = Total tag identification count (including duplicate tags).
+        Head|Len|Address|Cmd| AntID | ReadRate (2 bytes) | TotalRead(4 bytes)       | checksum
+        [A0|0A | 01    | 89| 00    |   '00', '14'       |   '00', '00', '00', '0D' |  AB      ]
+
+        raw:
+        ['A0', '0A', '01', '89', '00', '00', '14', '00', '00', '00', '0D', 'AB']
+
+        tag packet example:
+        * FreqAnt = 1 byte. The high 6 bits are frequency parameter; the low two bits are antenna id.
+        * PC = Tag’s PC. 2 bytes
+        * EPC = Tag's EPC. n bytes
+        * RSSI = 1 byte. The RSSI when the tag was identified
+
+        Head|Len|Address|Cmd| FreqAnt |PC(2 bytes)  |                           EPC(n bytes)                                | RSSI | checksum
+        [A0|13 | 01    | 89| 0C      | '30', '00'  | 'E2', '00', '00', '15', '24', '02', '02', '19', '15', '20', '7F', '39'|  52  |  10     ]
+
+        raw:
+        ['A0', '13', '01', '89', '0C', '30', '00', 'E2', '00', '00', '15', '24', '02', '02', '19', '15', '20', '7F', '39', '52', '10']
         """
         if result:
             result = self._parse_result(result)
@@ -110,10 +117,10 @@ class cmd_inventory(RFIDCommand):
             interval: sets the time interval in deciseconds (centisecond) the controller will scan for tags before yielding results.
         """
         if interval:
-            self.repeat_interval = interval
+            self.scan_duration = interval
         print(f"Tx: {self.printable_command}")
         session.write(self.command)
-        sleep(self.repeat_interval/10+DEFAULT_TIMEOUT)
+        sleep(self.scan_duration/10+DEFAULT_TIMEOUT)
         in_waiting = session.in_waiting
         r = session.read(in_waiting)
         # print(r)

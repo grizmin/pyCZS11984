@@ -20,7 +20,7 @@ def main():
         cmd_get_rf_link_profile = command('cmd_get_rf_link_profile')
         cmd_get_rf_port_return_loss = command('cmd_get_rf_port_return_loss')
         cmd_get_work_antenna = command('cmd_get_work_antenna')
-        inventory = command('cmd_inventory', 2)
+        rt_inventory = command('cmd_rt_inventory', 2)
         cmd_read_gpio_value = command('cmd_read_gpio_value')
         # cmd_set_beeper_mode = command('cmd_set_beeper_mode', 1)
         # cmd_set_uart_baudrate = command('cmd_set_uart_baudrate', 115200)
@@ -28,9 +28,9 @@ def main():
 
         cmd_version(s)
         # print all tags
-        # inventory command supports interval parameter, which overwrites instantination parameter interval.
+        # rt_inventory command supports interval parameter, which supersedes instance parameter.
         # E.G. inventory(s, interval=10)
-        print("\n".join([f"id: {id}, tagid: {tagid}" for id, tagid in enumerate(["".join(tag["tag_epc"]) for tag in inventory(s, interval=10)["result"]["tags"]])]))
+        print("\n".join([f"{id}) tagid: {tagid}" for id, tagid in enumerate(["".join(tag["tag_epc"]) for tag in rt_inventory(s, interval=10)["result"]["tags"]])]))
 
         # cmd_write_gpio = command('cmd_write_gpio_value', [3, 0])
 

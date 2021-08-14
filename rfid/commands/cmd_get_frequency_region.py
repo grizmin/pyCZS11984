@@ -51,7 +51,7 @@ class cmd_get_frequency_region(RFIDCommand):
     def __call__(self, session: Serial,
                  callback: Callable[[bytes], bool] = _process_result) -> list[str]:
         """
-        sends the command to the specified serial session.
+        sends command to the specified serial session.
         Args:
             session: Serial session
         """

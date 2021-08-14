@@ -14,7 +14,9 @@ class cmd_get_firmware_version(RFIDCommand):
         result = self._parse_result(result)[-1]
         major = result[-3]
         minor = result[-2]
-        return f"{major}.{minor}"
+        version_data = {"version": None}
+        version_data["version"] = f"{major}.{minor}"
+        return version_data
 
     def __call__(self, session: Serial, callback=_process_result) -> list[str]:
         """

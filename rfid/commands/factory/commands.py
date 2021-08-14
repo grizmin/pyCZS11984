@@ -23,5 +23,5 @@ command.register_command('cmd_set_temporary_output_power', cmd_set_temporary_out
 command.register_command('cmd_get_reader_identifier', cmd_get_reader_identifier.cmd_get_reader_identifier)
 command.register_command('cmd_get_rf_link_profile', cmd_get_rf_link_profile.cmd_get_rf_link_profile)
 command.register_command('cmd_get_rf_port_return_loss', cmd_get_rf_port_return_loss.cmd_get_rf_port_return_loss)
-command.register_command('cmd_inventory', cmd_inventory.cmd_inventory)
+command.register_command('cmd_rt_inventory', cmd_rt_inventory.cmd_rt_inventory)
 command.register_command('cmd_reset', cmd_reset.cmd_reset)
