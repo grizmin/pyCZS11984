@@ -43,8 +43,8 @@ class cmd_rt_inventory(RFIDCommand):
         * AntId = The antenna ID of this inventory round.
         * ReadRate = Tag ReadRate of this command (tag/sec).
         * TotalRead = Total tag identification count (including duplicate tags).
-        Head|Len|Address|Cmd| AntID | ReadRate (2 bytes) | TotalRead(4 bytes)       | checksum
-        [A0|0A | 01    | 89| 00    |   '00', '14'       |   '00', '00', '00', '0D' |  AB      ]
+         Head|Len|Address|Cmd| AntID | ReadRate (2 bytes) | TotalRead(4 bytes)       | checksum
+        [ A0 |0A | 01    | 89| 00    |   '00', '14'       |   '00', '00', '00', '0D' |  AB     ]
 
         raw:
         ['A0', '0A', '01', '89', '00', '00', '14', '00', '00', '00', '0D', 'AB']
@@ -55,8 +55,8 @@ class cmd_rt_inventory(RFIDCommand):
         * EPC = Tag's EPC. n bytes
         * RSSI = 1 byte. The RSSI when the tag was identified
 
-        Head|Len|Address|Cmd| FreqAnt |PC(2 bytes)  |                           EPC(n bytes)                                | RSSI | checksum
-        [A0|13 | 01    | 89| 0C      | '30', '00'  | 'E2', '00', '00', '15', '24', '02', '02', '19', '15', '20', '7F', '39'|  52  |  10     ]
+        Head|Len|Address|Cmd| FreqAnt | PC(2 bytes)  |                           EPC(n bytes)                                | RSSI | checksum
+        [A0 |13 |   01  |89 | 0C      | '30', '00'   | 'E2', '00', '00', '15', '24', '02', '02', '19', '15', '20', '7F', '39'|  52  |  10     ]
 
         raw:
         ['A0', '13', '01', '89', '0C', '30', '00', 'E2', '00', '00', '15', '24', '02', '02', '19', '15', '20', '7F', '39', '52', '10']
@@ -80,10 +80,10 @@ class cmd_rt_inventory(RFIDCommand):
                 # PC
                 tag_pc = p[5:7]
                 # RSSI
-                tag_rssi = self.RSSI_MAP[int(p[-2], 16)]
+                tag_rssi = RSSI_MAP[int(p[-2], 16)]
 
                 # The high 6 bits are frequency parameter; the low 2 bits are antenna ID
-                tag_freq = self.FREQ_MAP[int(f"{int(p[4], 16):08b}"[2:], 2)]
+                tag_freq = FREQ_MAP[int(f"{int(p[4], 16):08b}"[2:], 2)]
                 tag_antenna_id = int(f"{int(p[4], 16):08b}"[:2], 2)
 
                 data_object = {

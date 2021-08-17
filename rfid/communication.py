@@ -1,6 +1,7 @@
 import serial
 from typing import List
 from serial.tools import list_ports
+from sys import platform
 
 
 def props(cls: object) -> List[str]:
@@ -8,6 +9,9 @@ def props(cls: object) -> List[str]:
 
 
 def list_devices() -> None:
+    """
+        Prints all serial devices.
+    """
     for device in list_ports.comports():
         print(f"*** Device: {list_ports.comports().index(device)} ***")
         for p in [prop for prop in props(device) if prop != 'device']:
@@ -15,14 +19,39 @@ def list_devices() -> None:
 
 
 def get_device_by_serial(serial_number: str) -> str:
+    """
+    Returns:
+        name of the device, which corresponds to the given serial.
+    """
     return next(list_ports.grep(serial_number)).device
 
 
 class RFIDSession():
+    """
+        RFID session to the RFID device.
+    """
+
     def __init__(self, device: str):
-        self.device = device.upper()
+        if platform == "linux" or platform == "linux2":
+            self.device = device
+        elif platform == "darwin":
+            self.device = device
+        elif platform == "win32":
+            self.device = device.upper()
+        else:
+            self.device = device
 
     def session(self, baudrate: int = 115200, timeout: int = 1):
+        """
+
+        Args:
+            baudrate: Baudrate to use. Default 115200
+            timeout: default timeout. More information: https://pyserial.readthedocs.io/en/latest/pyserial_api.html#classes
+
+        Returns:
+            Serial session
+
+        """
 
         ser = serial.Serial(self.device, baudrate, timeout=timeout)
         print(f"{self.device} is {'open' if ser.is_open else 'closed'}.")

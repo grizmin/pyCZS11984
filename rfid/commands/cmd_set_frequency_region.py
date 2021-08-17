@@ -97,9 +97,12 @@ class cmd_set_frequency_region(RFIDCommand):
         assert 0 <= freq_params[2] <= 59, "End frequency must be in range 0-59"
         self._freq_params = freq_params
 
-    def _process_result(self, result: bytes) -> bool:
-        r = self._parse_result(result)[-1][-2]
-        return ERR_CODES[f'0x{r}'][1]
+    def _process_result(self, result: bytes) -> str:
+        if result:
+            r = self._parse_result(result)[-1][-2]
+            return ERR_CODES[f'0x{r}'][1]
+        else:
+            return "No response"
 
     def __call__(self, session: Serial,
                  callback: Callable[[bytes], bool] = _process_result) -> list[str]:

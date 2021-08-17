@@ -30,8 +30,8 @@ class cmd_inventory(RFIDCommand):
     """
     cmd_inventory = '80'
 
-    def __init__(self, scan_duration: int):
-        self.scan_duration = scan_duration
+    def __init__(self, repeat_interval: int):
+        self.repeat_interval = repeat_interval
 
 
     @property
@@ -45,7 +45,7 @@ class cmd_inventory(RFIDCommand):
     def repeat_interval(self, repeat_interval: int) -> None:
         assert 1 <= repeat_interval <= 255, "Scan duration. Accepted values are in range 0-255."
         self._repeat_interval = repeat_interval
-        super().__init__(self.cmd_rt_inventory, param_data=[self.repeat_interval])
+        super().__init__(self.cmd_inventory, param_data=[self.repeat_interval])
 
 
     def _process_result(self, result: bytes) -> bool:
@@ -56,47 +56,31 @@ class cmd_inventory(RFIDCommand):
         """
         if result:
             result = self._parse_result(result)
+
+            # handle error
+            if int(result[-1][1], 16) == 4:
+                return {'error': ERR_CODES[result[-1][-1]][1]}
+
             stats = result[-1]
-            # print(result)
 
             # TotalRead
             num_tags = int("".join(stats[-5:-1]), 16)
             # ReadRate
             read_rate = int("".join(stats[-7:-5]), 16)
+            # TagCount
+            tag_count = int("".join(stats[-9:-7]), 16)
             # AntId
             antenna_id = int(stats[4], 16)
-
-            def parse_tag_packet(tag_packet: list):
-                p = tag_packet
-                # EPC
-                tag_epc = p[7:-2]
-                # PC
-                tag_pc = p[5:7]
-                # RSSI
-                tag_rssi = self.RSSI_MAP[int(p[-2], 16)]
-
-                # The high 6 bits are frequency parameter; the low 2 bits are antenna ID
-                tag_freq = self.FREQ_MAP[int(f"{int(p[4], 16):08b}"[2:], 2)]
-                tag_antenna_id = int(f"{int(p[4], 16):08b}"[:2], 2)
-
-                data_object = {
-                    "tag_epc": tag_epc,
-                    "tag_pc": tag_pc,
-                    "tag_rssi": tag_rssi,
-                    "tag_freq": tag_freq,
-                    "tag_antenna_id": tag_antenna_id
-                }
-                return data_object
 
             tags_data = {
                 "num_tags": num_tags,
                 "read_rate": read_rate,
                 "antenna_id": antenna_id,
-                "tags": []
+                "tag_count": tag_count
             }
 
-            for tag in result[:-1]:
-                tags_data["tags"].append(parse_tag_packet(tag))
+            # for tag in result[:-1]:
+            #     tags_data["tags"].append(parse_tag_packet(tag))
 
             return {'result': tags_data}
         return 'Command returned nothing.'

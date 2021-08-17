@@ -21,9 +21,12 @@ def main():
         cmd_get_rf_port_return_loss = command('cmd_get_rf_port_return_loss')
         cmd_get_work_antenna = command('cmd_get_work_antenna')
         rt_inventory = command('cmd_rt_inventory', 2)
+        inventory = command('cmd_inventory', 5)
+        cmd_read = command("cmd_read", 1, 0, 7)
+        # cmd_read(s, mem_bank=1, word_address=0, word_count=7)
         cmd_read_gpio_value = command('cmd_read_gpio_value')
-        # cmd_set_beeper_mode = command('cmd_set_beeper_mode', 1)
-        # cmd_set_uart_baudrate = command('cmd_set_uart_baudrate', 115200)
+        cmd_set_beeper_mode = command('cmd_set_beeper_mode', 1)
+        cmd_set_uart_baudrate = command('cmd_set_uart_baudrate', 115200)
 
 
         cmd_version(s)

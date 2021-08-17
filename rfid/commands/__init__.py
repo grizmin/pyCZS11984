@@ -19,7 +19,8 @@ __all__ = [
     'cmd_get_rf_link_profile',
     'cmd_get_rf_port_return_loss',
     'cmd_rt_inventory',
-    'cmd_write',
+    'cmd_inventory',
+    # 'cmd_write',
     'cmd_read'
 ]
 
